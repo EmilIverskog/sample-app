@@ -9,10 +9,12 @@ import { SafeAreaView, StyleSheet,StatusBar } from 'react-native';
 
 import { useColorScheme } from '@/hooks/useColorScheme';
 
-//import { firebaseConfig } from '../config/config'
+import { firebaseConfig } from '../config/config'
 import {initializeApp} from '@firebase/app'
 import { getAuth } from '@firebase/auth';
 import { AuthenticationContext } from '@/contexts/AuthenticationContext'
+import {getFirestore} from '@firebase/firestore'
+import { FireStoreContext } from '@/contexts/FireStoreContext';
 
 // Prevent the splash screen from auto-hiding before asset loading is complete.
 SplashScreen.preventAutoHideAsync();
@@ -23,8 +25,9 @@ export default function RootLayout() {
     SpaceMono: require('../assets/fonts/SpaceMono-Regular.ttf'),
   });
 
-  //const FBapp = initializeApp(firebaseConfig)
-  //const FBauth = getAuth(FBapp)
+  const FBapp = initializeApp(firebaseConfig)
+  const FBauth = getAuth(FBapp)
+  const FBfs = getFirestore(FBapp)
 
   useEffect(() => {
     if (loaded) {
@@ -38,11 +41,13 @@ export default function RootLayout() {
 
   return (
     <ThemeProvider value={colorScheme === 'dark' ? DarkTheme : DefaultTheme}>
-      
-        <SafeAreaView style={Styles.container}>
-          <Stack screenOptions={{headerShown: false}}/>
-        </SafeAreaView>
-      
+      <AuthenticationContext.Provider value ={FBauth}>
+        <FireStoreContext.Provider value ={FBfs}>
+          <SafeAreaView style={Styles.container}>
+            <Stack screenOptions={{headerShown: false}}/>
+          </SafeAreaView>
+          </FireStoreContext.Provider>
+      </AuthenticationContext.Provider>
     </ThemeProvider>
   );
 }

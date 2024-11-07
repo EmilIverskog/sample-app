@@ -1,70 +1,117 @@
-import { Image, StyleSheet, Platform } from 'react-native';
+import React, { useEffect, useState, useContext } from 'react';
+import { View, Text, StyleSheet, FlatList, Pressable, CheckBox } from 'react-native';
+import { useNavigation, Link } from 'expo-router';
+import { ItemPrototype } from '@/interfaces/itemInterface'
+import { FireStoreContext } from '@/contexts/FireStoreContext';
 
-import { HelloWave } from '@/components/HelloWave';
-import ParallaxScrollView from '@/components/ParallaxScrollView';
-import { ThemedText } from '@/components/ThemedText';
-import { ThemedView } from '@/components/ThemedView';
 
-export default function HomeScreen() {
+export default function HomeScreen(props: any) {
+  
+  const db = useContext(FireStoreContext)
+
+  const listData: ItemPrototype[] = [
+    { id: 1, name: "Item1", status: true },
+    { id: 2, name: "Item2", status: false },
+    { id: 3, name: "Item3", status: true },
+    { id: 4, name: "Item4", status: true },
+    { id: 5, name: "Item5", status: false }
+  ];
+
+  const [datastate, setdatastate] = useState<ItemPrototype[]>([])
+
+  useEffect(() => {
+    if (datastate.length === 0) {
+      setdatastate(listData);
+    }
+  }, [datastate]);
+
+  // Function to toggle the completion status of each habit
+  const toggleHabitCompletion = (id: number) => {
+    setdatastate((prevData) =>
+      prevData.map((habit) =>
+        habit.id === id
+          ? { ...habit, status: !habit.status } // Toggle the boolean value of status
+          : habit
+      )
+    );
+  };
+  
+
+  const renderItem = ({ item }: any) => {
+    return (
+      <View style={styles.habitContainer}>
+        <CheckBox
+          value={item.status} 
+          onValueChange={() => toggleHabitCompletion(item.id)}
+          />
+        <Text style={[styles.habitText, item.status === "completed" && styles.completedHabit]}>
+          {item.name}
+        </Text>
+      </View>
+    );
+  };
+
   return (
-    <ParallaxScrollView
-      headerBackgroundColor={{ light: '#A1CEDC', dark: '#1D3D47' }}
-      headerImage={
-        <Image
-          source={require('@/assets/images/partial-react-logo.png')}
-          style={styles.reactLogo}
-        />
-      }>
-      <ThemedView style={styles.titleContainer}>
-        <ThemedText type="title">Welcome!</ThemedText>
-        <HelloWave />
-      </ThemedView>
-      <ThemedView style={styles.stepContainer}>
-        <ThemedText type="subtitle">Step 1: Try it</ThemedText>
-        <ThemedText>
-          Edit <ThemedText type="defaultSemiBold">app/(tabs)/index.tsx</ThemedText> to see changes.
-          Press{' '}
-          <ThemedText type="defaultSemiBold">
-            {Platform.select({ ios: 'cmd + d', android: 'cmd + m' })}
-          </ThemedText>{' '}
-          to open developer tools.
-        </ThemedText>
-      </ThemedView>
-      <ThemedView style={styles.stepContainer}>
-        <ThemedText type="subtitle">Step 2: Explore</ThemedText>
-        <ThemedText>
-          Tap the Explore tab to learn more about what's included in this starter app.
-        </ThemedText>
-      </ThemedView>
-      <ThemedView style={styles.stepContainer}>
-        <ThemedText type="subtitle">Step 3: Get a fresh start</ThemedText>
-        <ThemedText>
-          When you're ready, run{' '}
-          <ThemedText type="defaultSemiBold">npm run reset-project</ThemedText> to get a fresh{' '}
-          <ThemedText type="defaultSemiBold">app</ThemedText> directory. This will move the current{' '}
-          <ThemedText type="defaultSemiBold">app</ThemedText> to{' '}
-          <ThemedText type="defaultSemiBold">app-example</ThemedText>.
-        </ThemedText>
-      </ThemedView>
-    </ParallaxScrollView>
+    <View style={styles.container}>
+      <Text style={styles.title}>Today's Goals</Text>
+      <FlatList
+        data={datastate}
+        renderItem={renderItem}
+        keyExtractor={(item) => item.id.toString()}
+      />
+
+      <Pressable style={styles.addButton}>
+      <Link href="/(tabs)/addHabit">
+        <Text style={styles.addButtonText}>Add New Goal</Text>
+        </Link>
+      </Pressable>
+    </View>
   );
-}
+};
 
 const styles = StyleSheet.create({
-  titleContainer: {
+  container: {
+    flex: 1,
+    paddingHorizontal: 30,
+    backgroundColor: '#FFFFFF',
+    paddingTop: 60,
+  },
+  title: {
+    fontSize: 30,
+    fontWeight: 'bold',
+    marginBottom: 30,
+  },
+  habitContainer: {
     flexDirection: 'row',
     alignItems: 'center',
-    gap: 8,
+    backgroundColor: '#F5F5F5',
+    padding: 15,
+    borderRadius: 5,
+    marginBottom: 15,
   },
-  stepContainer: {
-    gap: 8,
-    marginBottom: 8,
+  habitText: {
+    fontSize: 18,
+    marginLeft: 10,
   },
-  reactLogo: {
-    height: 178,
-    width: 290,
-    bottom: 0,
-    left: 0,
+  completedHabit: {
+    textDecorationLine: 'line-through',
+    color: 'gray',
+  },
+  addButton: {
+    backgroundColor: '#000000',
+    paddingVertical: 15,
+    borderRadius: 25,
+    alignItems: 'center',
+    justifyContent: 'center',
+    width: '90%',
     position: 'absolute',
+    bottom: 20,
+    alignSelf: 'center',
+    marginBottom: 20,
+  },
+  addButtonText: {
+    color: '#FFFFFF',
+    fontSize: 16,
+    fontWeight: 'bold',
   },
 });
