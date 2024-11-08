@@ -3,11 +3,14 @@ import { View, Text, StyleSheet, FlatList, Pressable, CheckBox } from 'react-nat
 import { useNavigation, Link } from 'expo-router';
 import { ItemPrototype } from '@/interfaces/itemInterface'
 import { FireStoreContext } from '@/contexts/FireStoreContext';
+import { AuthenticationContext
 
+ } from '@/contexts/AuthenticationContext';
 
 export default function HomeScreen(props: any) {
   
   const db = useContext(FireStoreContext)
+  const auth = useContext(AuthenticationContext)
 
   const listData: ItemPrototype[] = [
     { id: 1, name: "Item1", status: true },
@@ -25,12 +28,12 @@ export default function HomeScreen(props: any) {
     }
   }, [datastate]);
 
-  // Function to toggle the completion status of each habit
+  
   const toggleHabitCompletion = (id: number) => {
     setdatastate((prevData) =>
       prevData.map((habit) =>
         habit.id === id
-          ? { ...habit, status: !habit.status } // Toggle the boolean value of status
+          ? { ...habit, status: !habit.status } 
           : habit
       )
     );
