@@ -1,7 +1,7 @@
 import { Text, View, StyleSheet, TextInput, Pressable } from 'react-native';
 import { useContext, useState } from 'react';
 import { AuthenticationContext } from '@/contexts/AuthenticationContext';
-import {signInWithEmailAndPassword} from '@firebase/auth'
+import { signInWithEmailAndPassword } from '@firebase/auth'
 import { useNavigation, Link } from 'expo-router';
 
 export default function SignIn() {
@@ -12,50 +12,51 @@ export default function SignIn() {
   const navigation = useNavigation();
   const fbauth = useContext(AuthenticationContext)
 
-  const signInUser = () =>{
+  // signing in the user 
+  const signInUser = () => {
     signInWithEmailAndPassword(fbauth, email, password)
-    .then((user) => {
-      navigation.navigate("(tabs)")
-    })
-    .catch((error) => console.log(error))
+      .then((user) => {
+        navigation.navigate("(tabs)")
+      })
+      .catch((error) => console.log(error))
   }
 
   return (
     <View style={styles.container}>
       <Text style={styles.title}>Sign In</Text>
-      
+
       <Text style={styles.label}>Email</Text>
-      <TextInput 
-        placeholder="Email" 
-        style={styles.field} 
+      <TextInput
+        placeholder="Email"
+        style={styles.field}
         value={email}
-        onChangeText={(txt) => setEmail(txt)}  
+        onChangeText={(txt) => setEmail(txt)}
       />
-      
+
       <Text style={styles.label}>Password</Text>
-      <TextInput 
+      <TextInput
         placeholder="Password"
         style={styles.field}
         secureTextEntry={true}
         value={password}
         onChangeText={(txt) => setPassword(txt)}
       />
-      
-      <Pressable 
-  style={styles.button}
-  onPress={() => signInUser()}>
 
-  <Text style={styles.buttonText}>SIGN IN</Text>
-</Pressable>
+      <Pressable
+        style={styles.button}
+        onPress={() => signInUser()}>
+
+        <Text style={styles.buttonText}>SIGN IN</Text>
+      </Pressable>
       <Link href="/">
-      <Text style={styles.footerText}>
-        Don’t have an account?{' '}
-        <Text 
-          style={styles.link} 
-        >
-          Sign Up
+        <Text style={styles.footerText}>
+          Don’t have an account?{' '}
+          <Text
+            style={styles.link}
+          >
+            Sign Up
+          </Text>
         </Text>
-      </Text>
       </Link>
     </View>
   );

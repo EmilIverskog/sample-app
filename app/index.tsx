@@ -8,6 +8,7 @@ import { FireStoreContext } from '@/contexts/FireStoreContext'
 
 export default function AuthenticationScreen() {
 
+  // variables to store user inputs
   const [email, setEmail] = useState('')
   const [password, setPassword] = useState('')
   const [confirmPassword, setConfirmPassword] = useState('')
@@ -19,12 +20,13 @@ export default function AuthenticationScreen() {
   const auth = useContext(AuthenticationContext)
   const navigation = useNavigation()
 
+  //function to sign up user
   const signUpUser = () => {
     createUserWithEmailAndPassword(fbauth, email, password)
       .then(async (userCredential) => {
         const user = userCredential.user;
-  
-        
+
+
         try {
           await setDoc(doc(collection(db, 'users'), user.uid), {
             name: name,
@@ -38,7 +40,8 @@ export default function AuthenticationScreen() {
       })
       .catch((error) => console.log(error));
   };
-      
+
+  // checking if password and confirm password matches 
   useEffect(() => {
     if (password.length >= 6 && confirmPassword.length >= 6) {
       setPasswordMatch(password === confirmPassword);
@@ -47,6 +50,7 @@ export default function AuthenticationScreen() {
     }
   }, [password, confirmPassword]);
 
+  // making sure that the email is in valid form 
   useEffect(() => {
     if (
       email.includes('@') &&

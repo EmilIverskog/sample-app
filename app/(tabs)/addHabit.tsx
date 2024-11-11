@@ -11,47 +11,56 @@ export default function AddHabit() {
   const db = useContext(FireStoreContext)
   const auth = useContext(AuthenticationContext)
   const userDataPath = `users/${auth.currentUser.uid}/goals`
+  // varible for sending updates to the homeScreen
   const { setGoalRefresh } = useGoals()
 
+  // Varibles to store input from user
   const [name, setName] = useState('')
   const [notes, setNotes] = useState('')
   const [date, setDate] = useState(new Date())
   const [open, setOpen] = useState(false)
 
+
+  // setting the start date todays date, so user can't add goals for days before 
   const today = new Date();
   const startDate = getFormatedDate(today.setDate(today.getDate() + 1), 'YYYY/MM/DD')
+
   const [showConfirmation, setShowConfirmation] = useState(false)
 
+  // visibility for selecting date 
   function handleOnPress() {
     setOpen(!open);
   }
 
+  // handles the date change
   function handleDateChange(propDate: string) {
     setDate(new Date(propDate));
   }
 
+  // adds new goal to firebase 
   const addGoal = async () => {
-    const userId = auth.currentUser.uid;
+    const userId = auth.currentUser.uid
     if (userId) {
       try {
-        const path = collection(db, userDataPath);
+        const path = collection(db, userDataPath)
         await addDoc(path, {
           name: name,
           notes: notes,
           date: date,
         })
-        
+
+        // resets the textboxes
         setName('')
         setNotes('')
         setDate(new Date())
         setGoalRefresh(true)
 
-        
+
 
         setShowConfirmation(true);
       } catch (error) {
         console.error("Error adding document: ", error)
-      }      
+      }
     }
   };
 

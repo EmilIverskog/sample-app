@@ -1,54 +1,101 @@
-import { Image, StyleSheet, View, Text, Pressable, Modal, TextInput } from 'react-native';
-import { AuthenticationContext } from '@/contexts/AuthenticationContext';
-import { useContext, useState, useEffect } from 'react';
-import { onAuthStateChanged, signOut } from '@firebase/auth';
-import { useNavigation, router } from 'expo-router';
-import { doc, getDoc } from '@firebase/firestore';
-import { FireStoreContext } from '@/contexts/FireStoreContext';
+import { Image, StyleSheet, View, Text, Pressable, Modal, TextInput } from 'react-native'
+import { AuthenticationContext } from '@/contexts/AuthenticationContext'
+import { useContext, useState, useEffect } from 'react'
+import { onAuthStateChanged, signOut } from '@firebase/auth'
+import { useNavigation, router } from 'expo-router'
+import { doc, getDoc, updateDoc } from '@firebase/firestore'
+import { FireStoreContext } from '@/contexts/FireStoreContext'
 
 export default function ProfileScreen() {
-    const [currentUser, setCurrentUser] = useState<any | null>();
-    const fbauth = useContext(AuthenticationContext);
-    const navigation = useNavigation();
-    const [userName, setUserName] = useState('');
-    const auth = useContext(AuthenticationContext);
-    const db = useContext(FireStoreContext);
-    const [modalVisible, setModalVisible] = useState<boolean>(false);
-    const [newName, setNewName] = useState<string | undefined>();
+    const [currentUser, setCurrentUser] = useState<any | null>()
+    const fbauth = useContext(AuthenticationContext)
+    const navigation = useNavigation()
+    const [userName, setUserName] = useState('')
+    const [email, setNewEmail] = useState('')
+    const auth = useContext(AuthenticationContext)
+    const db = useContext(FireStoreContext)
+    const [modalVisible, setModalVisible] = useState<boolean>(false)
+    const [modalType, setModalType] = useState<'name' | 'email' | null>(null)
+    const [newInput, setNewInput] = useState<string | undefined>()
 
+    // monotor auth state changes 
     useEffect(() => {
         const unsubscribe = onAuthStateChanged(fbauth, (user) => {
             if (user) {
                 setCurrentUser(user);
             } else {
                 setCurrentUser(null);
-                console.log("Signed out");
-              
-                setTimeout(() => router.replace("../"), 0);
-            }
-        });
+                console.log("Signed out")
 
+                router.replace("/login")
+            }
+        })
+        
         return () => unsubscribe();
     }, [fbauth]);
 
+    // sign out the user 
     const signOutUser = () => {
         signOut(fbauth)
             .then(() => console.log("User signed out"))
-            .catch((error) => console.log("Sign-out error:", error));
+            .catch((error) => console.log("Sign-out error:", error))
     };
 
+    // update users name in firebase 
+    const updateName = async () => {
+        if (auth.currentUser && newInput) {
+            try {
+                const userDocRef = doc(db, 'users', auth.currentUser.uid)
+                await updateDoc(userDocRef, {
+                    name: newInput
+                })
+
+                setUserName(newInput)
+                setModalVisible(false)
+            } catch (error) {
+                console.error("Could not update naem", error)
+            }
+        }
+    }
+
+    // update users email in firebase 
+    const updateEmail = async () => {
+        if (auth.currentUser && newInput) {
+            try {
+                const userDocRef = doc(db, 'users', auth.currentUser.uid)
+                await updateDoc(userDocRef, {
+                    email: newInput
+                })
+                setNewEmail(newInput)
+            } catch (error) {
+                console.log("could not update email")
+            }
+        }
+    }
+
+    // determine which modal view to open 
+    const saveinput = () => {
+        if (modalType === 'name') {
+            updateName()
+        } else if (modalType === 'email') {
+            updateEmail()
+        }
+        setModalVisible(false)
+    }
+
+    // getting the user name and displaying it 
     useEffect(() => {
         const fetchUserName = async () => {
             if (auth.currentUser) {
                 try {
-                    const userDocRef = doc(db, 'users', auth.currentUser.uid);
-                    const userDoc = await getDoc(userDocRef);
+                    const userDocRef = doc(db, 'users', auth.currentUser.uid)
+                    const userDoc = await getDoc(userDocRef)
                     if (userDoc.exists()) {
-                        const userData = userDoc.data();
-                        setUserName(userData.name || ''); 
+                        const userData = userDoc.data()
+                        setUserName(userData.name || '')
                     }
                 } catch (error) {
-                    console.error("Error fetching user data: ", error);
+                    console.error("Error fetching user data: ", error)
                 }
             }
         };
@@ -60,11 +107,19 @@ export default function ProfileScreen() {
             <Text style={styles.title}>Profile</Text>
             <Text style={styles.userName}>{userName}</Text>
 
-            <Pressable style={styles.button} onPress={() => setModalVisible(true)}>
+            <Pressable style={styles.button} onPress={() => {
+                setModalType('name');
+                setModalVisible(true);
+                setNewInput(userName);
+            }}>
                 <Text style={styles.buttonText}>Change Name</Text>
             </Pressable>
 
-            <Pressable style={styles.button}>
+            <Pressable style={styles.button} onPress={() => {
+                setModalType('email');
+                setModalVisible(true);
+                setNewInput(email);
+            }}>
                 <Text style={styles.buttonText}>Change Email</Text>
             </Pressable>
 
@@ -77,15 +132,23 @@ export default function ProfileScreen() {
             </Pressable>
 
             <Modal visible={modalVisible} transparent>
-                <View>
-                    <Text>New Name</Text>
-                    <TextInput value={newName} onChangeText={(val) => setNewName(val)} />
-                    <Pressable onPress={() => setModalVisible(false)}>
-                        <Text>Save</Text>
-                    </Pressable>
-                    <Pressable onPress={() => setModalVisible(false)}>
-                        <Text>Cancel</Text>
-                    </Pressable>
+                <View style={styles.modalOverlay}>
+                    <View style={styles.modalContent}>
+                        <Text style={styles.title}>
+                            {modalType === 'name' ? 'Change Name' : 'Change Email'}
+                        </Text>
+                        <TextInput
+                            style={styles.input}
+                            value={newInput}
+                            onChangeText={(val) => setNewInput(val)}
+                        />
+                        <Pressable style={styles.modalButton} onPress={saveinput}>
+                            <Text style={styles.buttonText}>Save</Text>
+                        </Pressable>
+                        <Pressable style={styles.modalButton} onPress={() => setModalVisible(false)}>
+                            <Text style={styles.buttonText}>Cancel</Text>
+                        </Pressable>
+                    </View>
                 </View>
             </Modal>
         </View>
@@ -140,32 +203,22 @@ const styles = StyleSheet.create({
         width: '80%',
         alignItems: 'center',
     },
-    modalTitle: {
-        fontSize: 20,
-        fontWeight: 'bold',
-        marginBottom: 10,
-    },
+
     input: {
         width: '100%',
         padding: 10,
-        borderColor: '#ddd',
+        borderColor: 'black',
         borderWidth: 1,
         borderRadius: 5,
         marginBottom: 15,
     },
-    saveButton: {
-        backgroundColor: '#4CAF50',
+    modalButton: {
+        backgroundColor: '#E0E0E0',
         paddingVertical: 10,
         borderRadius: 5,
         width: '100%',
         alignItems: 'center',
         marginBottom: 10,
     },
-    cancelButton: {
-        backgroundColor: '#FF5C5C',
-        paddingVertical: 10,
-        borderRadius: 5,
-        width: '100%',
-        alignItems: 'center',
-    },
+
 });

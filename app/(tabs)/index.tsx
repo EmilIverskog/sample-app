@@ -12,14 +12,15 @@ export default function HomeScreen(props: any) {
   const db = useContext(FireStoreContext)
   const auth = useContext(AuthenticationContext)
   const userDataPath = `users/${auth.currentUser.uid}/goals`
-  const { goalRefresh, setGoalRefresh } = useGoals();
+  const { goalRefresh, setGoalRefresh } = useGoals()
 
-  
+
 
   const [datastate, setdatastate] = useState<ItemPrototype[]>([])
   const [currentDate, setCurrentDate] = useState('')
   const [dataLoaded, setDataLoaded] = useState<boolean>(false)
 
+  // loads the goals 
   useEffect(() => {
     if (dataLoaded == false) {
       getGoals()
@@ -27,33 +28,35 @@ export default function HomeScreen(props: any) {
     }
   }, [dataLoaded])
 
+  // sets the dates 
   useEffect(() => {
-
     const today = new Date();
-    const options = { year: 'numeric', month: 'long', day: 'numeric' };
-    setCurrentDate(today.toLocaleDateString(undefined, options));
+    const options = { year: 'numeric', month: 'long', day: 'numeric' }
+    setCurrentDate(today.toLocaleDateString(undefined, options))
   }, []);
 
+  // reloads the goals when goalRefresh is true 
   useEffect(() => {
-    if(goalRefresh){
+    if (goalRefresh) {
       getGoals()
       setGoalRefresh(false)
     }
   }), [goalRefresh]
 
+  // gets goals from firebase that matches todays date 
   const getGoals = async () => {
     if (auth.currentUser.uid) {
-      const path = collection(db, userDataPath);
-      const querySnapshot = await getDocs(path);
-  
-      
-      const today = format(new Date(), 'yyyy/MM/dd');
-  
+      const path = collection(db, userDataPath)
+      const querySnapshot = await getDocs(path)
+
+
+      const today = format(new Date(), 'yyyy/MM/dd')
+
       let userData: ItemPrototype[] = [];
       querySnapshot.forEach((userDocument) => {
-        let document: any = userDocument.data();
-        
-        
+        let document: any = userDocument.data()
+
+        // Adding goals with the right date 
         if (document.date && format(new Date(document.date.seconds * 1000), 'yyyy/MM/dd') === today) {
           document.id = userDocument.id;
           userData.push(document);
@@ -63,14 +66,16 @@ export default function HomeScreen(props: any) {
     }
   }
 
+  // toggle the status by ID
   const toggleHabitCompletion = (id: string) => {
     setdatastate((prevData) =>
       prevData.map((habit) =>
         habit.id === id ? { ...habit, status: !habit.status } : habit
       )
-    );
-  };
+    )
+  }
 
+  // render each goal
   const renderItem = ({ item }: any) => {
     return (
       <View style={styles.habitContainer}>
@@ -82,8 +87,8 @@ export default function HomeScreen(props: any) {
           {item.name}
         </Text>
       </View>
-    );
-  };
+    )
+  }
 
   return (
     <View style={styles.container}>
@@ -96,13 +101,13 @@ export default function HomeScreen(props: any) {
       />
 
       <Pressable style={styles.addButton}>
-        <Link href={{ pathname: "/(tabs)/addHabit"}}>
+        <Link href={{ pathname: "/(tabs)/addHabit" }}>
           <Text style={styles.addButtonText}>Add New Goal</Text>
         </Link>
       </Pressable>
     </View>
-  );
-};
+  )
+}
 
 const styles = StyleSheet.create({
   container: {
