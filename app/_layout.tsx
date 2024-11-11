@@ -15,6 +15,7 @@ import { getAuth } from '@firebase/auth';
 import { AuthenticationContext } from '@/contexts/AuthenticationContext'
 import {getFirestore} from '@firebase/firestore'
 import { FireStoreContext } from '@/contexts/FireStoreContext';
+import { GoalsProvider } from '@/contexts/GoalsContext'
 
 // Prevent the splash screen from auto-hiding before asset loading is complete.
 SplashScreen.preventAutoHideAsync();
@@ -43,9 +44,11 @@ export default function RootLayout() {
     <ThemeProvider value={colorScheme === 'dark' ? DarkTheme : DefaultTheme}>
       <AuthenticationContext.Provider value ={FBauth}>
         <FireStoreContext.Provider value ={FBfs}>
+          <GoalsProvider>
           <SafeAreaView style={Styles.container}>
             <Stack screenOptions={{headerShown: false}}/>
           </SafeAreaView>
+          </GoalsProvider>
           </FireStoreContext.Provider>
       </AuthenticationContext.Provider>
     </ThemeProvider>

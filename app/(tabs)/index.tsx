@@ -1,53 +1,84 @@
-import React, { useEffect, useState, useContext } from 'react';
-import { View, Text, StyleSheet, FlatList, Pressable, CheckBox } from 'react-native';
-import { useNavigation, Link } from 'expo-router';
+import React, { useEffect, useState, useContext } from 'react'
+import { View, Text, StyleSheet, FlatList, Pressable, CheckBox } from 'react-native'
+import { useNavigation, Link } from 'expo-router'
 import { ItemPrototype } from '@/interfaces/itemInterface'
-import { FireStoreContext } from '@/contexts/FireStoreContext';
-import { AuthenticationContext
-
- } from '@/contexts/AuthenticationContext';
+import { FireStoreContext } from '@/contexts/FireStoreContext'
+import { AuthenticationContext } from '@/contexts/AuthenticationContext'
+import { collection, query, where, getDocs } from '@firebase/firestore'
+import { useGoals } from '@/contexts/GoalsContext'
+import { format } from 'date-fns'
 
 export default function HomeScreen(props: any) {
-  
   const db = useContext(FireStoreContext)
   const auth = useContext(AuthenticationContext)
-
-  const listData: ItemPrototype[] = [
-    { id: 1, name: "Item1", status: true },
-    { id: 2, name: "Item2", status: false },
-    { id: 3, name: "Item3", status: true },
-    { id: 4, name: "Item4", status: true },
-    { id: 5, name: "Item5", status: false }
-  ];
-
-  const [datastate, setdatastate] = useState<ItemPrototype[]>([])
-
-  useEffect(() => {
-    if (datastate.length === 0) {
-      setdatastate(listData);
-    }
-  }, [datastate]);
+  const userDataPath = `users/${auth.currentUser.uid}/goals`
+  const { goalRefresh, setGoalRefresh } = useGoals();
 
   
-  const toggleHabitCompletion = (id: number) => {
+
+  const [datastate, setdatastate] = useState<ItemPrototype[]>([])
+  const [currentDate, setCurrentDate] = useState('')
+  const [dataLoaded, setDataLoaded] = useState<boolean>(false)
+
+  useEffect(() => {
+    if (dataLoaded == false) {
+      getGoals()
+      setDataLoaded(true)
+    }
+  }, [dataLoaded])
+
+  useEffect(() => {
+
+    const today = new Date();
+    const options = { year: 'numeric', month: 'long', day: 'numeric' };
+    setCurrentDate(today.toLocaleDateString(undefined, options));
+  }, []);
+
+  useEffect(() => {
+    if(goalRefresh){
+      getGoals()
+      setGoalRefresh(false)
+    }
+  }), [goalRefresh]
+
+  const getGoals = async () => {
+    if (auth.currentUser.uid) {
+      const path = collection(db, userDataPath);
+      const querySnapshot = await getDocs(path);
+  
+      
+      const today = format(new Date(), 'yyyy/MM/dd');
+  
+      let userData: ItemPrototype[] = [];
+      querySnapshot.forEach((userDocument) => {
+        let document: any = userDocument.data();
+        
+        
+        if (document.date && format(new Date(document.date.seconds * 1000), 'yyyy/MM/dd') === today) {
+          document.id = userDocument.id;
+          userData.push(document);
+        }
+      });
+      setdatastate(userData);
+    }
+  }
+
+  const toggleHabitCompletion = (id: string) => {
     setdatastate((prevData) =>
       prevData.map((habit) =>
-        habit.id === id
-          ? { ...habit, status: !habit.status } 
-          : habit
+        habit.id === id ? { ...habit, status: !habit.status } : habit
       )
     );
   };
-  
 
   const renderItem = ({ item }: any) => {
     return (
       <View style={styles.habitContainer}>
         <CheckBox
-          value={item.status} 
+          value={item.status}
           onValueChange={() => toggleHabitCompletion(item.id)}
-          />
-        <Text style={[styles.habitText, item.status === "completed" && styles.completedHabit]}>
+        />
+        <Text style={[styles.habitText, item.status && styles.completedHabit]}>
           {item.name}
         </Text>
       </View>
@@ -57,6 +88,7 @@ export default function HomeScreen(props: any) {
   return (
     <View style={styles.container}>
       <Text style={styles.title}>Today's Goals</Text>
+      <Text style={styles.dateText}>{currentDate}</Text>
       <FlatList
         data={datastate}
         renderItem={renderItem}
@@ -64,8 +96,8 @@ export default function HomeScreen(props: any) {
       />
 
       <Pressable style={styles.addButton}>
-      <Link href="/(tabs)/addHabit">
-        <Text style={styles.addButtonText}>Add New Goal</Text>
+        <Link href={{ pathname: "/(tabs)/addHabit"}}>
+          <Text style={styles.addButtonText}>Add New Goal</Text>
         </Link>
       </Pressable>
     </View>
@@ -82,7 +114,14 @@ const styles = StyleSheet.create({
   title: {
     fontSize: 30,
     fontWeight: 'bold',
-    marginBottom: 30,
+    marginBottom: 10,
+    alignSelf: 'center',
+  },
+  dateText: {
+    fontSize: 18,
+    color: 'gray',
+    marginBottom: 20,
+    textAlign: 'center',
   },
   habitContainer: {
     flexDirection: 'row',

@@ -1,19 +1,26 @@
-import React, { useState } from 'react';
-import { View, Text, TextInput, Pressable, StyleSheet, Modal } from 'react-native';
-import DatePicker from 'react-native-modern-datepicker';
-import { getFormatedDate } from 'react-native-modern-datepicker';
-import TimePicker from 'react-native-simple-time-picker';
+import React, { useState, useContext } from 'react'
+import { View, Text, TextInput, Pressable, StyleSheet, Modal } from 'react-native'
+import DatePicker from 'react-native-modern-datepicker'
+import { getFormatedDate } from 'react-native-modern-datepicker'
+import { FireStoreContext } from '@/contexts/FireStoreContext'
+import { AuthenticationContext } from '@/contexts/AuthenticationContext'
+import { collection, addDoc } from '@firebase/firestore'
+import { useGoals } from '@/contexts/GoalsContext'
 
 export default function AddHabit() {
-  const [name, setName] = useState('');
-  const [notes, setNotes] = useState('');
-  const [date, setDate] = useState(new Date());
-  const [open, setOpen] = useState(false);
-  const [selectedHours, setSelectedHours] = useState(0);
-  const [selectedMinutes, setSelectedMinutes] = useState(0);
+  const db = useContext(FireStoreContext)
+  const auth = useContext(AuthenticationContext)
+  const userDataPath = `users/${auth.currentUser.uid}/goals`
+  const { setGoalRefresh } = useGoals()
+
+  const [name, setName] = useState('')
+  const [notes, setNotes] = useState('')
+  const [date, setDate] = useState(new Date())
+  const [open, setOpen] = useState(false)
 
   const today = new Date();
-  const startDate = getFormatedDate(today.setDate(today.getDate() + 1), 'YYYY/MM/DD');
+  const startDate = getFormatedDate(today.setDate(today.getDate() + 1), 'YYYY/MM/DD')
+  const [showConfirmation, setShowConfirmation] = useState(false)
 
   function handleOnPress() {
     setOpen(!open);
@@ -22,6 +29,31 @@ export default function AddHabit() {
   function handleDateChange(propDate: string) {
     setDate(new Date(propDate));
   }
+
+  const addGoal = async () => {
+    const userId = auth.currentUser.uid;
+    if (userId) {
+      try {
+        const path = collection(db, userDataPath);
+        await addDoc(path, {
+          name: name,
+          notes: notes,
+          date: date,
+        })
+        
+        setName('')
+        setNotes('')
+        setDate(new Date())
+        setGoalRefresh(true)
+
+        
+
+        setShowConfirmation(true);
+      } catch (error) {
+        console.error("Error adding document: ", error)
+      }      
+    }
+  };
 
   return (
     <View style={styles.container}>
@@ -66,18 +98,8 @@ export default function AddHabit() {
           </View>
         </View>
       </Modal>
-      <Text style={styles.label}>Select Time</Text>
-      <TimePicker
-        selectedHours={selectedHours}
-        selectedMinutes={selectedMinutes}
-        onChange={(hours: number, minutes: number) => {
-          setSelectedHours(hours);
-          setSelectedMinutes(minutes);
-        }}
-      />
-      <Text style={styles.timeText}>Selected Time: {selectedHours}:{selectedMinutes < 10 ? `0${selectedMinutes}` : selectedMinutes}</Text>
 
-      <Pressable style={styles.saveButton} onPress={() => {}}>
+      <Pressable style={styles.saveButton} onPress={addGoal}>
         <Text style={styles.saveButtonText}>Save Goal</Text>
       </Pressable>
     </View>
@@ -177,12 +199,5 @@ const styles = StyleSheet.create({
     color: '#FFFFFF',
     fontSize: 16,
     fontWeight: 'bold',
-  },
-
-  timeText: {
-    fontSize: 18,
-    color: 'black',
-    textAlign: 'center',
-    marginVertical: 20,
   },
 });
