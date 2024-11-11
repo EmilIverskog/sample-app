@@ -1,4 +1,37 @@
-# Welcome to your Expo app 👋
+Habit Tracker 
+Welcome to the Habit Tracker app. The app is dessigned to help user with everyday goals. 
+
+Description 
+
+The habit Tracker app allows user to 
+
+Create daily goals 
+Track progress
+Stay motivated 
+
+Features 
+
+User authentication
+Add and track daily goals 
+Edit profile 
+Firebase
+
+How to use 
+
+Sign in or sign up depending if you have a account 
+
+use the add goal to add a goal
+
+track progress by checking of the goals during the day 
+
+Edit profile, change name,email or log out on the profile page
+
+
+
+
+
+
+
 
 This is an [Expo](https://expo.dev) project created with [`create-expo-app`](https://www.npmjs.com/package/create-expo-app).
 
