@@ -18,7 +18,7 @@ export default function ProfileScreen() {
     const [modalType, setModalType] = useState<'name' | 'email' | null>(null)
     const [newInput, setNewInput] = useState<string | undefined>()
 
-    // monotor auth state changes 
+    // Monitor auth state changes
     useEffect(() => {
         const unsubscribe = onAuthStateChanged(fbauth, (user) => {
             if (user) {
@@ -26,7 +26,6 @@ export default function ProfileScreen() {
             } else {
                 setCurrentUser(null);
                 console.log("Signed out")
-
                 router.replace("/login")
             }
         })
@@ -34,14 +33,14 @@ export default function ProfileScreen() {
         return () => unsubscribe();
     }, [fbauth]);
 
-    // sign out the user 
+    // Sign out the user
     const signOutUser = () => {
         signOut(fbauth)
             .then(() => console.log("User signed out"))
             .catch((error) => console.log("Sign-out error:", error))
     };
 
-    // update users name in firebase 
+    // Update user's name in Firebase
     const updateName = async () => {
         if (auth.currentUser && newInput) {
             try {
@@ -49,16 +48,15 @@ export default function ProfileScreen() {
                 await updateDoc(userDocRef, {
                     name: newInput
                 })
-
                 setUserName(newInput)
                 setModalVisible(false)
             } catch (error) {
-                console.error("Could not update naem", error)
+                console.error("Could not update name", error)
             }
         }
     }
 
-    // update users email in firebase 
+    // Update user's email in Firebase
     const updateEmail = async () => {
         if (auth.currentUser && newInput) {
             try {
@@ -68,12 +66,12 @@ export default function ProfileScreen() {
                 })
                 setNewEmail(newInput)
             } catch (error) {
-                console.log("could not update email")
+                console.log("Could not update email")
             }
         }
     }
 
-    // determine which modal view to open 
+    // Determine which modal view to open
     const saveinput = () => {
         if (modalType === 'name') {
             updateName()
@@ -83,7 +81,7 @@ export default function ProfileScreen() {
         setModalVisible(false)
     }
 
-    // getting the user name and displaying it 
+    // Fetch the user's name from Firebase
     useEffect(() => {
         const fetchUserName = async () => {
             if (auth.currentUser) {
@@ -123,8 +121,9 @@ export default function ProfileScreen() {
                 <Text style={styles.buttonText}>Change Email</Text>
             </Pressable>
 
-            <Pressable style={styles.button}>
-                <Text style={styles.buttonText}>Previous Goals (not working yet)</Text>
+           
+            <Pressable style={styles.button} onPress={() => router.push("/previousGoals")}>
+                <Text style={styles.buttonText}>Previous Goals</Text>
             </Pressable>
 
             <Pressable style={[styles.button, styles.button]} onPress={signOutUser}>
@@ -154,7 +153,6 @@ export default function ProfileScreen() {
         </View>
     );
 }
-
 
 const styles = StyleSheet.create({
     container: {
@@ -203,7 +201,6 @@ const styles = StyleSheet.create({
         width: '80%',
         alignItems: 'center',
     },
-
     input: {
         width: '100%',
         padding: 10,
@@ -220,5 +217,4 @@ const styles = StyleSheet.create({
         alignItems: 'center',
         marginBottom: 10,
     },
-
 });

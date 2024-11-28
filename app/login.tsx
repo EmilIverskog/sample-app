@@ -1,29 +1,36 @@
 import { Text, View, StyleSheet, TextInput, Pressable } from 'react-native';
 import { useContext, useState } from 'react';
 import { AuthenticationContext } from '@/contexts/AuthenticationContext';
-import { signInWithEmailAndPassword } from '@firebase/auth'
+import { signInWithEmailAndPassword } from '@firebase/auth';
 import { useNavigation, Link } from 'expo-router';
 
 export default function SignIn() {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
-  const [passwordMatch, setPasswordMatch] = useState(false)
-  const [validEmail, setValidEMail] = useState(false)
+  const [errorMessage, setErrorMessage] = useState(''); 
   const navigation = useNavigation();
-  const fbauth = useContext(AuthenticationContext)
+  const fbauth = useContext(AuthenticationContext);
 
   // signing in the user 
   const signInUser = () => {
+    setErrorMessage(''); 
     signInWithEmailAndPassword(fbauth, email, password)
       .then((user) => {
-        navigation.navigate("(tabs)")
+        navigation.navigate("(tabs)");
       })
-      .catch((error) => console.log(error))
-  }
+      .catch((error) => {
+        console.log(error);
+        setErrorMessage('Username or password is incorrect.'); 
+      });
+  };
 
   return (
     <View style={styles.container}>
       <Text style={styles.title}>Sign In</Text>
+
+      {errorMessage ? ( 
+        <Text style={styles.errorText}>{errorMessage}</Text>
+      ) : null}
 
       <Text style={styles.label}>Email</Text>
       <TextInput
@@ -48,12 +55,11 @@ export default function SignIn() {
 
         <Text style={styles.buttonText}>SIGN IN</Text>
       </Pressable>
+
       <Link href="/">
         <Text style={styles.footerText}>
           Don’t have an account?{' '}
-          <Text
-            style={styles.link}
-          >
+          <Text style={styles.link}>
             Sign Up
           </Text>
         </Text>
@@ -73,7 +79,13 @@ const styles = StyleSheet.create({
     fontSize: 30,
     fontWeight: 'bold',
     marginTop: 100,
-    marginBottom: 80,
+    marginBottom: 40,
+  },
+  errorText: {
+    color: 'red',
+    fontSize: 14,
+    marginBottom: 20,
+    textAlign: 'center',
   },
   label: {
     fontSize: 16,
@@ -116,7 +128,6 @@ const styles = StyleSheet.create({
     color: 'orange',
     fontWeight: 'bold',
   },
-
   buttonDisabled: {
     backgroundColor: '#D3D3D3',
     paddingVertical: 15,

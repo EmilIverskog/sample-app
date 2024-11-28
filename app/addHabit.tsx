@@ -5,12 +5,15 @@ import { getFormatedDate } from 'react-native-modern-datepicker'
 import { FireStoreContext } from '@/contexts/FireStoreContext'
 import { AuthenticationContext } from '@/contexts/AuthenticationContext'
 import { collection, addDoc } from '@firebase/firestore'
+import Icon from 'react-native-vector-icons/MaterialIcons'; 
+import { useNavigation } from 'expo-router';
 import { useGoals } from '@/contexts/GoalsContext'
 
 export default function AddHabit() {
   const db = useContext(FireStoreContext)
   const auth = useContext(AuthenticationContext)
   const userDataPath = `users/${auth.currentUser.uid}/goals`
+  const navigation = useNavigation();
   // varible for sending updates to the homeScreen
   const { setGoalRefresh } = useGoals()
 
@@ -66,6 +69,9 @@ export default function AddHabit() {
 
   return (
     <View style={styles.container}>
+      <Pressable style={styles.backArrow} onPress={() => navigation.goBack()}>
+        <Icon name="arrow-back" size={24} color="#000" />
+      </Pressable>
       <Text style={styles.title}>Add New Goal</Text>
 
       <Text style={styles.label}>Goal Name</Text>
@@ -208,5 +214,12 @@ const styles = StyleSheet.create({
     color: '#FFFFFF',
     fontSize: 16,
     fontWeight: 'bold',
+  },
+  backArrow: {
+    position: 'absolute',
+    top: 20,
+    left: 10,
+    zIndex: 1,
+    padding: 5,
   },
 });
